@@ -11,114 +11,165 @@ def create_kb() -> Prolog:
 
     prolog.assertz("same_temperature(Temp, ID2) :- temperature(ID2, Temp)")
     prolog.assertz("num_of_day_with_same_temp(Temp, Count) :-findall(Temp, same_temperature(Temp,ID2), L), length(L, Count)")
-    #queste sopra funzionano
-    #da qui in poi non funziona piu niente
-    prolog.assertz("wind_speed_of_a_month(month,speed) :- id(date(_,month,_,_,_,_),id), windspeed(id,speed)")
+    prolog.assertz("winter1(ID) :- id(_,M,_,_,ID),M<3")
+    prolog.assertz("winter2(ID) :- id(_,M,_,_,ID),M=12")
+    prolog.assertz("spring(ID) :- id(_,M,_,_,ID),M>2,M<6")
+    prolog.assertz("summer(ID):- id(_,M,_,_,ID),M>5,M<9")
+    prolog.assertz("autumn(ID):- id(_,M,_,_,ID),M>8,M<12")
+    prolog.assertz("cool(ID) :- apparent_temperature(ID,Temp),Temp<21,Temp>10")
+    prolog.assertz("mild(ID) :- apparent_temperature(ID,Temp),Temp<26,Temp>20")
+    prolog.assertz("warm(ID) :- apparent_temperature(ID,Temp),Temp<31,Temp>25")
+    prolog.assertz("hot(ID) :- apparent_temperature(ID,Temp),Temp>30,Temp<40")
+    prolog.assertz("sweltering(ID) :- apparent_temperature(ID,Temp),Temp>40")
+    prolog.assertz("cold(ID) :- apparent_temperature(ID,Temp),Temp<11,Temp>0")
+    prolog.assertz("freezing(ID) :- apparent_temperature(ID,Temp),Temp<1")
+
+    prolog.assertz("avg_windy(Year,Avg) :- findall(Speed, (windspeed(Id, Speed), id(Year, _, _, _, Id)), SpeedList),length(SpeedList, Count),sum_list(SpeedList, Sum),Avg is Sum / Count")
+    prolog.assertz("avg_windm(Month,Avg) :- findall(Speed, (windspeed(Id, Speed), id(_,Month, _, _, Id)), SpeedList),length(SpeedList, Count),sum_list(SpeedList, Sum),Avg is Sum / Count")
+    prolog.assertz("avg_tempy(Year,Avg) :- findall(Temp, (temperature(Id,Temp), id(Year, _, _, _, Id)), TempList),length(TempList, Count),sum_list(TempList, Sum),Avg is Sum / Count")
+    prolog.assertz("avg_tempm(Month,Avg) :- findall(Temp, (temperature(Id,Temp), id(_,Month, _, _, Id)), TempList),length(TempList, Count),sum_list(TempList, Sum),Avg is Sum / Count")
+    prolog.assertz("min_wind(Min) :- findall(Speed, windspeed(_, Speed), SpeedList), min_list(SpeedList,Min)")
+    prolog.assertz("max_wind(Max) :- findall(Speed, windspeed(_, Speed), SpeedList), max_list(SpeedList,Max)")
+    prolog.assertz("min_temp(Min) :- findall(Temp, temperature(_, Temp), TempList), min_list(TempList,Min)")
+    prolog.assertz("max_temp(Max) :- findall(Temp, temperature(_,Temp), TempList), max_list(TempList,Max)")
+    prolog.assertz("conta_occorrenzew(Id,Count) :- windspeed(Id,X),findall(Speed,windspeed(_,Speed),SpeedList), aggregate_all(count, member(X,SpeedList), Count)")
+    prolog.assertz("conta_occorrenzet(Id,Count) :- temperature(Id,X),findall(Temp,temperature(_,Temp),TempList), aggregate_all(count, member(X,TempList), Count)")
+    prolog.assertz("trova_posizione(Elemento, Lista, Posizione) :- nth1(Posizione, Lista, Elemento )")
+    prolog.assertz("most_frequency_speed(Speed) :- findall(Freq, conta_occorrenzew(Id,Freq),Freqlist), max_list(Freqlist,Max), trova_posizione(Max,Freqlist,Id),windspeed(Id,Speed)")
+    prolog.assertz("most_frequency_temp(Temp) :- findall(Freq, conta_occorrenzet(Id,Freq),Freqlist), max_list(Freqlist,Max), trova_posizione(Max,Freqlist,Id),temperature(Id,Temp)")
     
-    #lascia stare cio che scrivo qui sotto sono idee per aggiungere conoscenza
-    #posso aggiungere temperatura o altre cose medie di un giorno di un mese e di un anno
-    #posso aggiungere modo di vestirsi
+    with open('kb/query_numeriche.pl', 'w') as file:
+        for result in prolog.query("avg_windy(2006,Avg)"):
+            file.write('average wind speed in 2006= {}\n'.format(str(result["Avg"])))
+        file.write('most frequency wind speed= {}\n'.format(str(list(prolog.query(f"most_frequency_speed(Speed)"))[0]["Speed"])))
+        file.write('most frequency temperature= {}\n'.format(str(list(prolog.query(f"most_frequency_temp(Temp)"))[0]["Temp"])))
+        for result in prolog.query("avg_windm(4,Avg)"):
+            file.write('average wind speed in march={}\n'.format(str(result["Avg"])))
+        for result in prolog.query("avg_tempy(2006,Avg)"):
+            file.write('average temperature in 2006={}\n'.format(str(result["Avg"])))
+        for result in prolog.query("avg_tempm(4,Avg)"):
+            file.write('average temperature in march={}\n'.format(str(result["Avg"])))
+        for result in prolog.query("min_wind(Min)"):
+            file.write('minimum wind speed={}\n'.format(str(result["Min"])))
+        for result in prolog.query("max_wind(Max)"):
+            file.write('maximum wind speed={}\n'.format(str(result["Max"])))
+        for result in prolog.query("max_temp(Max)"):
+            file.write('maximum temperature={}\n'.format(str(result["Max"])))
+        for result in prolog.query("min_temp(Min)"):
+            file.write('minimum temperature={}\n'.format(str(result["Min"])))
 
-    prolog.assertz("outfit(id,outfit) :- apparent_temperature(id,temp), (temp>=25,dress='lightly'; temp<25,temp>12, dress = 'moderately'; temp<=12, dress = 'warmly')")
-    prolog.assertz("sum_wind(Sum) :- findall(speed,windspeed(_,speed),speedlist), sum_list(speedlist, Sum)")
-    #qui su volevo realizzare una query che mi calcolasse la media dell'intensità del vento ma già la somma non funzionava quindi ho lasciato perdere
-    prolog.assertz("minwindspeed(min):- findall(speed,windspeed(_,speed),speedlist),min(speedlist,min)")
-
-    #questo è un modo per eseguire la query 
-    features_dict = {}
-    #features_dict["DAYS_SAME_TEMPERATURE"] = list(prolog.query(f"num_of_day_with_same_temp({9.47222222222222}, Count)"))[0]["Count"]
-    #features_dict["AVG_WIND"]= round(list(prolog.query(f"avg_wind(Avg_w)"))[0]["Avg_w"],2)
-    features_dict["outfit"] = list(prolog.query(f"outfit(1,outfit)"))[0]["outfit"]
-
-    #questo qui sotto commentato è un altro modo per eseguire le query
-    '''  if result:
-        avg_w = result[0]["outfit"]
-        print("Valore di avg_w:", avg_w)
-    else:
-        print("Nessun risultato trovato")'''
-    print(features_dict["outfit"])
     
-    #tutto quello che c è qui sotto commentato è di un altro progetto da cui ho preso spunto ti passo qui il github nel caso tu volessi vederlo(è molto piu complesso del mio ma ci sono tante cose teoriche li che io non ho capito e quindi non le ho messe. Tuttavia il mio progetto non finisce qui ma è in fase di stallo per questa parte qua)
-    #qui c è il link del progetto github da dove ho preso spunto https://github.com/sam-e-sere/NYC (non ti sentire obbligato a vederlo era giusto cosi per dirtelo)
-    '''prolog.assertz("num_of_accidents_in_borough(accident(ID), Count) :- findall(ID1, accidents_same_borough(accident(ID), accident(ID1)), L), length(L, Count)")
-    prolog.assertz("num_of_accidents_on_street(accident(ID), Count) :- street_name(accident(ID), OnStreet), borough(accident(ID), Borough), (OnStreet = 'unknown' -> Count = 'unknown' ; OnStreet \\= 'unknown', findall(StreetID, (street_name(accident(StreetID), OnStreet), borough(accident(StreetID), Borough)), StreetIDs), sort(StreetIDs, UniqueStreetIDs), length(UniqueStreetIDs, Count))")
+    with open('kb/winter.pl', 'w') as file:
+        for result in prolog.query("winter1(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))
+        for result in prolog.query("winter2(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))
+    with open('kb/spring.pl', 'w') as file:
+        for result in prolog.query("spring(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))
+    with open('kb/summer.pl', 'w') as file:
+        for result in prolog.query("summer(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))
+    with open('kb/autumn.pl', 'w') as file:
+        for result in prolog.query("autumn(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))
+    with open('kb/hot.pl', 'w') as file:
+        for result in prolog.query("hot(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))
+    with open('kb/sweltering.pl', 'w') as file:
+        for result in prolog.query("sweltering(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))
+    with open('kb/warm.pl', 'w') as file:
+        for result in prolog.query("warm(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))
+    with open('kb/mild.pl', 'w') as file:
+        for result in prolog.query("mild(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))
+    with open('kb/cool.pl', 'w') as file:
+        for result in prolog.query("cool(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))
+    with open('kb/cold.pl', 'w') as file:
+        for result in prolog.query("cold(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))
+    with open('kb/freezing.pl', 'w') as file:
+        for result in prolog.query("freezing(ID)"):
+            file.write('{}\n'.format(str(result["ID"])))        
+            
    
-    # conteggi sulla data/tempo
-    prolog.assertz("time_of_day(accident(ID), TimeOfDay) :- hour(accident(ID), Hour), (Hour >= 4, Hour < 7, TimeOfDay = 'dawn'; Hour >= 7, Hour < 10, TimeOfDay = 'early morning'; Hour >= 10, Hour < 12, TimeOfDay = 'late morning'; Hour >= 12, Hour < 15, TimeOfDay = 'early afternoon'; Hour >= 15, Hour < 18, TimeOfDay = 'late afternoon'; Hour >= 18, Hour < 20, TimeOfDay = 'early evening'; Hour >= 20, Hour < 22, TimeOfDay = 'late evening'; Hour >= 22, Hour < 24, TimeOfDay = 'early night'; Hour >= 0, Hour < 4, TimeOfDay = 'late night')")
-    
-    #gravità (0 feriti e 0 morti = lieve, 1/+ feriti e 0 morti = moderato, 0/+ feriti e 1/+ morti = grave)
-    prolog.assertz("severity(accident(ID), Severity) :- num_injured(accident(ID), NumInjured), num_killed(accident(ID), NumKilled), (NumInjured = 0, NumKilled = 0, Severity = 'minor'; NumInjured >= 1, NumKilled = 0, Severity = 'moderate'; NumInjured >= 0, NumKilled > 0, Severity = 'major')")
-    
-    
-    #meteo
-    prolog.assertz("temperature_classification(accident(ID), Temperature) :- has_Weather(accident(ID), Data), temperature(Data,Temp), (Temp < 10.0, Temperature = 'cold'; Temp > 26.0, Temperature = 'hot'; Temp >= 10.0, Temp =< 26.0, Temperature = 'mild')")
-    prolog.assertz("rain_intensity(accident(ID), RainIntensity) :- has_Weather(accident(ID), Data), rain(Data,Rain), (Rain >= 0.1, Rain =< 4, RainIntensity = 'weak'; Rain > 4, Rain =< 6, RainIntensity = 'moderate'; Rain > 6, Rain =< 10, RainIntensity = 'heavy'; Rain > 10, RainIntensity = 'shower activity'; Rain = 0.0, RainIntensity = 'unknown')")
-    prolog.assertz("cloudcover(accident(ID)) :- has_Weather(accident(ID), Data), cloudcover(Data,Cloud), Cloud > 70")
-    prolog.assertz("wind_intensity(accident(ID), WindIntensity) :- has_Weather(accident(ID), Data), windspeed(Data,Wind), (Wind > 0, Wind =< 19, WindIntensity = 'weak'; Wind > 19, Wind =< 39, WindIntensity = 'moderate'; Wind > 39, Wind =< 59, WindIntensity = 'strong'; Wind > 59, Wind =< 74, WindIntensity = 'gale'; Wind > 74, Wind =< 89, WindIntensity = 'strong gale'; Wind >= 90, WindIntensity = 'storm'; Wind = 0.0, WindIntensity = 'unknown')")
-    
-    #traffico
-    prolog.assertz("traffic_volume(accident(ID), Volume) :- has_Traffic(accident(ID), traffic(TrafficID)), volume(traffic(TrafficID), Vol), (Vol < 100, Volume = 'light'; Vol > 500, Volume = 'heavy'; Vol >= 100, Vol =< 500, Volume = 'medium')")
-    prolog.assertz("volume_sum_same_location(accident(ID), TotalVolume) :- findall(Vol, (accidents_same_borough(accident(ID), accident(ID1)), accidents_same_street(accident(ID), accident(ID1)), borough(accident(ID1), Borough), street_name(accident(ID1), Street), has_Traffic(accident(ID1), traffic(TrafficID)), volume(traffic(TrafficID), Vol)), Volumes), sum_list(Volumes, TotalVolume)")
-    prolog.assertz("average_volume_same_location(accident(ID), AvgVolume) :- num_of_accidents_on_street(accident(ID), NumAccidents), (NumAccidents = 'unknown' -> AvgVolume = 'unknown'; volume_sum_same_location(accident(ID), TotalVolume), AvgVolume is TotalVolume / NumAccidents)")
+def ottieni_ids(file_name):
+    with open(file_name, 'r') as file:
+        ids = [line.strip() for line in file]
 
-    #incidente senza feriti e morti
-    prolog.assertz("is_not_dangerous(accident(ID)) :- severity(accident(ID), 'minor')")
-
-    return prolog
-
-
-#query sulla KB
-def calculate_features(kb, accident_id, final=False) -> dict:
-    features_dict = {}
-
-    features_dict["COLLISION_ID"] = accident_id
-
-    accident_id = f"accident({accident_id})"
-
-    features_dict["NUM_ACCIDENTS_BOROUGH"] = list(kb.query(f"num_of_accidents_in_borough({accident_id}, Count)"))[0]["Count"]
-    features_dict["NUM_ACCIDENTS_ON_STREET"] = list(kb.query(f"num_of_accidents_on_street({accident_id}, Count)"))[0]["Count"]
-    features_dict["TIME_OF_DAY"] = list(kb.query(f"time_of_day({accident_id}, TimeOfDay)"))[0]["TimeOfDay"]
-    features_dict["SEVERITY"] = list(kb.query(f"severity({accident_id}, Severity)"))[0]["Severity"]
-
-    features_dict["TEMPERATURE"] = list(kb.query(f"temperature_classification({accident_id}, Temperature)"))[0]["Temperature"]
-    features_dict["RAIN_INTENSITY"] = list(kb.query(f"rain_intensity({accident_id}, RainIntensity)"))[0]["RainIntensity"]
-    features_dict["CLOUDCOVER"] = query_boolean_result(kb, f"cloudcover({accident_id})")
-    features_dict["WIND_INTENSITY"] = list(kb.query(f"wind_intensity({accident_id}, WindIntensity)"))[0]["WindIntensity"]
-
-    features_dict["TRAFFIC_VOLUME"] = list(kb.query(f"traffic_volume({accident_id}, Volume)"))[0]["Volume"]
-    features_dict["AVERAGE_VOLUME"] = round(list(kb.query(f"average_volume_same_location({accident_id}, AvgVolume)"))[0]["AvgVolume"],2)
-
-    features_dict["IS_NOT_DANGEROUS"] = query_boolean_result(kb, f"is_not_dangerous({accident_id})")
-
-    return features_dict
-
-
-def query_boolean_result(kb, query_str: str):
-    return min(len(list(kb.query(query_str))), 1)
-
+    return ids
 #creazione del dataset con la nuove feature
 def produce_working_dataset(kb: Prolog, path: str, final=False):
-    accidents_complete: pd.DataFrame = pd.read_csv("data/Selected Accidents.csv")
+    df=pd.read_csv("data/working_dataset/New_weather_history.csv")
+    season= {}
+    autumn = ottieni_ids("kb/autumn.pl")
+    spring=ottieni_ids("kb/spring.pl")
+    summer=ottieni_ids("kb/summer.pl")
+    winter=ottieni_ids("kb/winter.pl")
+    hot=ottieni_ids("kb/hot.pl")
+    sweltering=ottieni_ids("kb/sweltering.pl")
+    warm=ottieni_ids("kb/warm.pl")
+    mild=ottieni_ids("kb/mild.pl")
+    cool=ottieni_ids("kb/cool.pl")
+    cold=ottieni_ids("kb/cold.pl")
+    freezing=ottieni_ids("kb/freezing.pl")
+    
+    set_autumn = set(map(int,autumn))
+    set_spring = set(map(int,spring))
+    set_summer = set(map(int,summer))
+    set_winter = set(map(int,winter))
+    set_hot= set(map(int,hot))
+    set_sweltering= set(map(int,sweltering))
+    set_warm= set(map(int,warm))
+    set_mild= set(map(int,mild))
+    set_cold=set(map(int,cold))
+    set_cool= set(map(int,cool))
+    set_freezing= set(map(int,freezing))
 
-    extracted_values_df = None
-
-    first = True
-    for accident_id in accidents_complete["COLLISION_ID"]:
-
-        features_dict = calculate_features(kb, accident_id, final)
-        if first:
-            extracted_values_df = pd.DataFrame([features_dict])
-            first = False
-        else:
-            extracted_values_df = pd.concat([extracted_values_df, pd.DataFrame([features_dict])], ignore_index=True)
-
-    extracted_values_df.to_csv(path, index=False, mode ="w")'''
-
+    df['autumn'] = df['ID'].isin(set_autumn).astype(int)
+    df['spring'] = df['ID'].isin(set_spring).astype(int)
+    df['summer'] = df['ID'].isin(set_summer).astype(int)
+    df['winter'] = df['ID'].isin(set_winter).astype(int)
+    df['hot'] = df['ID'].isin(set_hot).astype(int)
+    df['sweltering'] = df['ID'].isin(set_sweltering).astype(int)
+    df['warm'] = df['ID'].isin(set_warm).astype(int)
+    df['mild'] = df['ID'].isin(set_mild).astype(int)
+    df['cold'] = df['ID'].isin(set_cold).astype(int)
+    df['cool'] = df['ID'].isin(set_cool).astype(int)
+    df['freezing'] = df['ID'].isin(set_freezing).astype(int)
+    
+    df.loc[df['winter'] == 1, 'season'] = 1
+    df.loc[df['summer'] == 1, 'season'] = 3
+    df.loc[df['autumn'] == 1, 'season'] = 4
+    df.loc[df['spring'] == 1, 'season'] = 2
+    df.loc[df['cold'] == 1, 'wind_chill'] = 'cold'
+    df.loc[df['hot'] == 1, 'wind_chill'] = 'hot'
+    df.loc[df['sweltering'] == 1, 'wind_chill'] = 'sweltering'
+    df.loc[df['warm'] == 1, 'wind_chill'] = 'warm'
+    df.loc[df['mild'] == 1, 'wind_chill'] = 'mild'
+    df.loc[df['cool'] == 1, 'wind_chill'] = 'cool'
+    df.loc[df['freezing'] == 1, 'wind_chill'] = 'freezing'
+    del df['winter']
+    del df['summer']
+    del df['autumn']
+    del df['spring']
+    del df['cold']
+    del df['hot']
+    del df['sweltering']
+    del df['warm']
+    del df['mild']
+    del df['cool']
+    del df['freezing']
+    df['season']=df['season'].apply(int)
+    df.to_csv('data/working_dataset/dataset_operativo.csv', index = False)
 
 def main():
     #create_prolog_kb()
     knowledge_base = create_kb()
-    #produce_working_dataset(knowledge_base, "kb/generated_dataset.csv")
-    #print("Created generated_dataset")
+    produce_working_dataset(knowledge_base, "kb/New_weather_history.csv")
+    print("Created generated_dataset")
 
 main()

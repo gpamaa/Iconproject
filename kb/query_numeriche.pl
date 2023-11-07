@@ -1,0 +1,10 @@
+average wind speed in 2006= 9.023005565862709
+most frequency wind speed= 3
+most frequency temperature= 0
+average wind speed in march=10.434722222222222
+average temperature in 2006=10.11038961038961
+average temperature in march=12.169444444444444
+minimum wind speed=0
+maximum wind speed=45
+maximum temperature=34
+minimum temperature=-14

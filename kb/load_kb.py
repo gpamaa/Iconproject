@@ -26,16 +26,16 @@ def load_data_in_kb(weather:pd.DataFrame,kb=None,):
     #Inserimento dati per il Meteo
     for index, row in weather.iterrows():
         data = f"{int(row['Y'])},{int(row['M'])},{int(row['D'])},{int(row['HH'])},0,0"
-        info = [f"id({datetime_to_prolog_fact(data)},{row['ID']})",
+        info = [f"id({int(row['Y'])},{int(row['M'])},{int(row['D'])},{int(row['HH'])},{row['ID']})",
                     f"summary({row['ID']},{row['Summary']})",
                     f"precipitation_type({row['ID']},'{row['Precip Type']}')",
-                    f"temperature({row['ID']},{row['Temperature (C)']})",
-                    f"apparent_temperature({row['ID']},{row['Apparent Temperature (C)']})",
-                    f"humidity({row['ID']},{row['Humidity']})",
-                    f"windspeed({row['ID']},{row['Wind Speed (km/h)']})",
-                    f"wind_bearing({row['ID']},{row['Wind Bearing (degrees)']})",
-                    f"visibility({row['ID']},{row['Visibility (km)']})",
-                    f"pressure({row['ID']},{row['Pressure (millibars)']})",
+                    f"temperature({row['ID']},{int(row['Temperature (C)'])})",
+                    f"apparent_temperature({row['ID']},{int(row['Apparent Temperature (C)'])})",
+                    f"humidity({row['ID']},{int(row['Humidity'])})",
+                    f"windspeed({row['ID']},{int(row['Wind Speed (km/h)'])})",
+                    f"wind_bearing({row['ID']},{int(row['Wind Bearing (degrees)'])})",
+                    f"visibility({row['ID']},{int(row['Visibility (km)'])})",
+                    f"pressure({row['ID']},{int(row['Pressure (millibars)'])})",
                     f"daily_summary({row['ID']},'{row['Daily Summary']}')"]
         action(info)
     if kb is not None:
@@ -63,19 +63,10 @@ def datetime_to_prolog_fact(datetime_str: str) -> str:
 def date_time_from_dataset(datetime_str: str) -> datetime:
     return datetime.datetime.strptime(datetime_str, '%Y,%m,%d,%H,%M,%S')
 def create_prolog_kb():
-    weather = pd.read_csv("data/working_dataset/New_Weather_history.csv")
+    weather = pd.read_csv("data/working_dataset/New_weather_history.csv")
     load_data_in_kb(weather)
 def main():
     create_prolog_kb()
 main()
   
                 
-'''  f"apparent_temperature({datetime_to_prolog_fact(data)},{row['Apparent Temperature (C)']})",
-                f"humidity({datetime_to_prolog_fact(data)},{row['Humidity']})",
-                f"windspeed({datetime_to_prolog_fact(data)},{row['Wind Speed (km/h)']})",
-                f"windbearing({datetime_to_prolog_fact(data)},{row['Wind Bearing (degrees)']})",
-                f"visibility({datetime_to_prolog_fact(data)},{row['Visibility (km)']})",
-                f"pressure({datetime_to_prolog_fact(data)},{row['Pressure (millibars)']})",
-                f"dailysummary({datetime_to_prolog_fact(data)},'{row['Daily Summary']}')" 
-                Summary,Precip Type,Temperature (C),Apparent Temperature (C),Humidity,Wind Speed (km/h),Wind Bearing (degrees),Visibility (km),Loud Cover,Pressure (millibars),Daily Summary
-                '''
